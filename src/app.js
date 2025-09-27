@@ -5,13 +5,61 @@ const app = express();
 
 app.use(express.json());
 
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (error) {
+    res.status(500).send("Error fetching feeds: " + error.message);
+  }
+});
+
+app.get("/user", async (req, res) => {
+  try {
+    const user = await User.findOne({ emailId: req.body.emailId });
+    if (!user) {
+      res.status(404).send("User not found");
+    } else {
+      res.send(user);
+    }
+  } catch (error) {
+    res.status(400).send("Error fetching user: " + error.message);
+  }
+});
+
 app.post("/signup", async (req, res) => {
   const user = new User(req.body);
   try {
     await user.save();
-    res.send("User added successfully!");
-  } catch (err) {
-    res.status(400).send("Error adding user:" + err.message);
+    res.status(201).send("User added successfully!");
+  } catch (error) {
+    res.status(400).send("Error adding user: " + error.message);
+  }
+});
+
+app.patch("/user", async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.body.userId, req.body, {
+      returnDocument: "after",
+    });
+    res.status(200).send("User updated successfully!");
+  } catch (error) {
+    res.status(400).send("Error updating user: " + error.message);
+  }
+});
+
+app.delete("/user", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.body.userId);
+    console.log(user);
+
+    if (!user) {
+      res.status(404).send("User not found");
+    } else {
+      res.send("User deleted successfully!");
+    }
+  } catch (error) {
+    res.status(400).send("Error deleting user: " + error.message);
   }
 });
 
