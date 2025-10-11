@@ -2,6 +2,8 @@ const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const app = express();
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
@@ -28,21 +30,53 @@ app.get("/user", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
+  const { firstName, lastName, emailId, password } = req.body;
   try {
+    validateSignUpData(req);
+
+    const passwordHash = await bcrypt.hash(req.body.password, 10);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.status(201).send("User added successfully!");
   } catch (error) {
-    res.status(400).send("Error adding user: " + error.message);
+    res.status(400).send("ERROR: " + error.message);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      throw new Error("Invalid credentials!");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Invalid credentials!");
+    }
+
+    res.send("User logged in successfully!");
+  } catch (error) {
+    res.status(400).send("ERRORs: " + error.message);
   }
 });
 
 app.patch("/user/:userId", async (req, res) => {
   try {
     const ALLOWED_UPDATES = ["photoUrl", "about", "skills", "gender", "age"];
-    const isUpdateAllowed = Object.keys(req.body).every(key => ALLOWED_UPDATES.includes(key));
-    if(!isUpdateAllowed){
-      throw new Error("Update not allowed!")
+    const isUpdateAllowed = Object.keys(req.body).every((key) =>
+      ALLOWED_UPDATES.includes(key)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed!");
     }
     const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
       returnDocument: "after",
@@ -50,7 +84,7 @@ app.patch("/user/:userId", async (req, res) => {
     });
     res.status(200).send("User updated successfully!");
   } catch (error) {
-    res.status(400).send("Error updating user: " + error.message);
+    res.status(400).send("ERROR: " + error.message);
   }
 });
 
