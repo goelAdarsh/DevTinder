@@ -37,10 +37,16 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.body.userId, req.body, {
+    const ALLOWED_UPDATES = ["photoUrl", "about", "skills", "gender", "age"];
+    const isUpdateAllowed = Object.keys(req.body).every(key => ALLOWED_UPDATES.includes(key));
+    if(!isUpdateAllowed){
+      throw new Error("Update not allowed!")
+    }
+    const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
       returnDocument: "after",
+      runValidators: true,
     });
     res.status(200).send("User updated successfully!");
   } catch (error) {
