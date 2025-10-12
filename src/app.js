@@ -4,30 +4,12 @@ const User = require("./models/user");
 const app = express();
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
-
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (error) {
-    res.status(500).send("Error fetching feeds: " + error.message);
-  }
-});
-
-app.get("/user", async (req, res) => {
-  try {
-    const user = await User.findOne({ emailId: req.body.emailId });
-    if (!user) {
-      res.status(404).send("User not found");
-    } else {
-      res.send(user);
-    }
-  } catch (error) {
-    res.status(400).send("Error fetching user: " + error.message);
-  }
-});
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   const { firstName, lastName, emailId, password } = req.body;
@@ -58,10 +40,16 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid credentials!");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       throw new Error("Invalid credentials!");
     }
+
+    // create a JWT token
+    const token = await user.getJWT();
+
+    // add the JWT token to cookie
+    res.cookie("token", token);
 
     res.send("User logged in successfully!");
   } catch (error) {
@@ -69,37 +57,11 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.patch("/user/:userId", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const ALLOWED_UPDATES = ["photoUrl", "about", "skills", "gender", "age"];
-    const isUpdateAllowed = Object.keys(req.body).every((key) =>
-      ALLOWED_UPDATES.includes(key)
-    );
-    if (!isUpdateAllowed) {
-      throw new Error("Update not allowed!");
-    }
-    const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-    res.status(200).send("User updated successfully!");
+    res.send(req.user);
   } catch (error) {
     res.status(400).send("ERROR: " + error.message);
-  }
-});
-
-app.delete("/user", async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.body.userId);
-    console.log(user);
-
-    if (!user) {
-      res.status(404).send("User not found");
-    } else {
-      res.send("User deleted successfully!");
-    }
-  } catch (error) {
-    res.status(400).send("Error deleting user: " + error.message);
   }
 });
 
