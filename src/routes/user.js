@@ -101,6 +101,9 @@ router.get("/user/connections", userAuth, async (req, res) => {
 router.get("/feed", userAuth, async (req, res) => {
   try {
     const loggedInUserId = req.user["_id"];
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = limit > 20 ? 20 : limit;
 
     // fetch all connection requests (irrespective of status)
     const processedConnectionRequests = await ConnectionRequestModel.find({
@@ -111,7 +114,7 @@ router.get("/feed", userAuth, async (req, res) => {
     // 1. ids of all the users who has interacted with the loggedInUser
     // 2. id of the loggedInUser
     const hideUsersList = new Set();
-    processedConnectionRequests
+    processedConnectionRequests.length
       ? processedConnectionRequests.forEach((connectionRequest) => {
           hideUsersList.add(connectionRequest.receiverId.toString());
           hideUsersList.add(connectionRequest.senderId.toString());
@@ -120,12 +123,15 @@ router.get("/feed", userAuth, async (req, res) => {
 
     const data = await User.find({
       _id: { $nin: [...hideUsersList] },
-    }).select(USER_SELECT_FIELDS);
+    })
+      .select(USER_SELECT_FIELDS)
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     if (!data.length) {
       return res.status(200).json({
         status: "success",
-        message: "No other profiles found",
+        message: "No profiles found",
         data: [],
         errors: null,
       });
