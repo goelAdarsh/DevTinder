@@ -1,6 +1,6 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
-const ConnectionRequestModel = require("../models/connectionRequest");
+const { ConnectionRequest } = require("../models/connectionRequest");
 const User = require("../models/user");
 
 const router = express.Router();
@@ -47,7 +47,7 @@ router.post("/requests", userAuth, async (req, res) => {
     }
 
     // validation for duplicate requests
-    const existingConnectionRequest = await ConnectionRequestModel.findOne({
+    const existingConnectionRequest = await ConnectionRequest.findOne({
       $or: [
         // check if sender has already sent a connection request to the receiver
         { senderId, receiverId },
@@ -67,7 +67,7 @@ router.post("/requests", userAuth, async (req, res) => {
       });
     }
 
-    const connectionRequest = new ConnectionRequestModel({
+    const connectionRequest = new ConnectionRequest({
       senderId,
       receiverId,
       status,
@@ -115,7 +115,7 @@ router.patch("/requests/:requestId", userAuth, async (req, res) => {
       });
     }
 
-    const connectionRequest = await ConnectionRequestModel.findById(requestId);
+    const connectionRequest = await ConnectionRequest.findById(requestId);
     // validation to check if connectionRequest exists
     if (!connectionRequest) {
       return res.status(404).json({

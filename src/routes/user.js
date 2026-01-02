@@ -1,6 +1,6 @@
 const express = require("express");
 const { userAuth } = require("../middlewares/auth");
-const { ConnectionRequestModel } = require("../models/connectionRequest");
+const { ConnectionRequest } = require("../models/connectionRequest");
 const User = require("../models/user");
 
 const router = express.Router();
@@ -19,7 +19,7 @@ router.get("/user/requests", userAuth, async (req, res) => {
     const loggedInUserId = req.user["_id"];
 
     // fetch all INTERESTED(pending) connectionRequests received by the loggedIn User
-    const data = await ConnectionRequestModel.find({
+    const data = await ConnectionRequest.find({
       receiverId: loggedInUserId,
       status: "INTERESTED",
     }).populate("senderId", USER_SELECT_FIELDS);
@@ -55,7 +55,7 @@ router.get("/user/connections", userAuth, async (req, res) => {
   try {
     const loggedInUserId = req.user["_id"];
 
-    let data = await ConnectionRequestModel.find({
+    let data = await ConnectionRequest.find({
       $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }],
       status: "ACCEPTED",
     }).populate({
@@ -106,7 +106,7 @@ router.get("/feed", userAuth, async (req, res) => {
     limit = limit > 20 ? 20 : limit;
 
     // fetch all connection requests (irrespective of status)
-    const processedConnectionRequests = await ConnectionRequestModel.find({
+    const processedConnectionRequests = await ConnectionRequest.find({
       $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }],
     }).select(["senderId", "receiverId"]);
 

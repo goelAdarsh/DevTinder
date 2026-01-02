@@ -5,10 +5,11 @@ const connectDB = async () => {
   //   await mongoose.connect(
   //     "mongodb+srv://adarshgoel:WsRbiOwCUl0mZTwV@namastenode.qdzi2tw.mongodb.net/"
   //   );
-  //   connects to the DB
+
+  //   connects to the collection(devTinder) in the cluster
   await mongoose.connect(
     "mongodb+srv://adarshgoel:WsRbiOwCUl0mZTwV@namastenode.qdzi2tw.mongodb.net/devTinder"
   );
 };
 
-module.exports = connectDB;
+module.exports = { connectDB };

@@ -28,17 +28,18 @@ const connectionRequestSchema = new mongoose.Schema(
 connectionRequestSchema.index({ senderId: 1, receiverId: 1 });
 
 connectionRequestSchema.pre("save", function (next) {
+  // connectionRequest is an object created using ConnectionRequest
   let connectionRequest = this;
-  // connectionRequest is an object created using connectionRequestModel
+
   if (connectionRequest.senderId.equals(connectionRequest.receiverId)) {
     return next(new Error("Cannot send a connection request to yourself"));
   }
   next();
 });
 
-const ConnectionRequestModel = mongoose.model(
+const ConnectionRequest = mongoose.model(
   "ConnectionRequest",
   connectionRequestSchema
 );
 
-module.exports = ConnectionRequestModel;
+module.exports = { ConnectionRequest };
