@@ -18,7 +18,13 @@ router.post("/signup", async (req, res) => {
       password: passwordHash,
     });
     await user.save();
-    res.status(201).send("User added successfully!");
+    // create a JWT token
+    const token = await user.getJWT();
+
+    // add the JWT token to cookie
+    res.cookie("token", token);
+
+    res.status(201).send(user);
   } catch (error) {
     res.status(400).send("ERROR: " + error.message);
   }
@@ -40,7 +46,7 @@ router.post("/login", async (req, res) => {
 
     // create a JWT token
     const token = await user.getJWT();
-    
+
     // add the JWT token to cookie
     res.cookie("token", token);
 

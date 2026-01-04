@@ -8,7 +8,7 @@ const connectDB = async () => {
 
   //   connects to the collection(devTinder) in the cluster
   await mongoose.connect(
-    "mongodb+srv://adarshgoel:WsRbiOwCUl0mZTwV@namastenode.qdzi2tw.mongodb.net/devTinder"
+    "mongodb+srv://adarshgoel:8n32KjpfhKssAMEC@namastenode.qdzi2tw.mongodb.net/devTinder"
   );
 };
 
